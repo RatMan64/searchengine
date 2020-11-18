@@ -10,89 +10,80 @@ import time
 # begining url
 url = "https://www.the-house.com/boardshop.html"
 
-
+# url extenstion
 regUrl = "www.The-House.com"
+headers = "itemDescription, picture,  Type, Brand, Year, Size, Price, Url, Onsale, Gender"
+out_filename = "SearchEngineData.csv"
+
+file = open(out_filename, "w", encoding='utf-8')
+file.write(headers)
 
 
-def firstPage():
+def beginScrape():
     uClient = uReq(url)
-
     page_html = bs(uClient.read(), "html.parser")
     uClient.close()
+    catigorys = page_html.findAll("div", {"class": "col-xs-6 skinny"})
+    time.sleep(5)
     # scrape for snowboards, snowbard jackets, snowboard pants, gloves, beanies, base layers, snowboard boots, bidings, helmets, goggles, bags.
     # feilds = item desc, picture, type, brand,  year, size, price, url, is onsale, gender
 
-    headers = "itemDescription, picture,  Type, Brand, Year, Size, Price, Url, Onsale, Gender"
-    out_filename = "SearchEngineData.csv"
+    for catigory in catigorys:
+        catigoryDetails = catigory.find("div", {"class": "category-name"})
+        catigoryName = catigoryDetails.span.name
 
-    file = open(out_filename, "w", encoding='utf-8')
-    file.write(headers)
+        # skip snow skaters
+        if catigoryName == "Snow Skate, Snow Surfers":
+            continue
+        # if its a catigory that has sub classes add that to the grab items
+        if catigoryName == "SnowBoarding Clothes & Apparel":
+            subCats()
+        else:
+            grabItems()
 
-
-    for catigory in catigory:
-        if catigory == "snowboard packages" or catigory == "snowboard acessories" or catigory == "snow skate, snow surfers":
-        #if its a catigory that has sub classes add that to the grab items
-        if catigory ==:
-        
-
-
-
-
+    file.close()
 
 
-
-
-def grabItems(extentionUrl, itemType, hasSubCats):
-    #first we look at the first page of the catigory we change the url as we have completed the page
-    newClient = uReq(regUrl+extentionUrl)
-    cagigorysoup = bs(newClient.read(), "html.parser")
-    newClient.close()
-    Type = itemType
-
-    # while loop that writes each catigroy item to the file
-
-    if(hasSubCats != True):
-
-        while():
-
-
-
-            for item in items:
-
-                itemDesc = ""
-                picture = ""
-                brand = ""
-                year = ""
-                size = ""
-                price = ""
-                url = ""
-                onsale = ""
-                Gender = ""
-
-
-
-
-                time.sleep(5)
-
-
-    else:
-
-
-
-
-
-
-
-
-
+def subCats(extentionUrl):
+    subClient = uReq(regUrl+extentionUrl)
+    subsoup = bs(subClient.read(), "html.parser")
+    subClient.close()
+    time.sleep(5)
+    cats = subsoup.findAll("div", {"class": "col-xs-6 skinny"})
+    for cat in cats:
 
     return
 
 
+def grabItems(extentionUrl, itemType):
+    # first we look at the first page of the catigory we change the url as we have completed the page
+    newClient = uReq(regUrl + extentionUrl)
+    cagigorysoup = bs(newClient.read(), "html.parser")
+    newClient.close()
+    time.sleep(5)
+    Type = itemType
+
+    # while loop that writes each catigroy item to the file
+
+    for item in items:
+        itemDesc = ""
+        picture = ""
+        brand = ""
+        year = ""
+        size = ""
+        price = ""
+        url = ""
+        onsale = ""
+        Gender = ""
+
+    return
 
 
 def main():
-    firstPage()
+    beginScrape()
+
+
+main()
 
 # snowBoards
 
