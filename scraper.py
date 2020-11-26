@@ -38,10 +38,10 @@ def beginScrape():
         # print(urlExt)
 
         # skip snow skaters
-        if catigoryName == "Snow Skate, Snow Surfers":
+        if catigoryName == "Snow Skate, Snow Surfers"  or catigoryName == "Snowboard Packages" or catigoryName == "Snowboards":
             continue
         # if its a catigory that has sub classes go to the subcats function
-        if catigoryName == "SnowBoarding Clothes & Apparel" or catigoryName =="Snowboard Accessories" or catigoryName =="Splitboard Gear":
+        if catigoryName == "Snowboarding Clothes & Apparel" or catigoryName == "Snowboard Accessories" or catigoryName =="Splitboard Gear":
             subCats(urlExt)
         else:
             grabItems(urlExt,catigoryName)
@@ -58,17 +58,26 @@ def subCats(extentionUrl):
     cats = subsoup.findAll("div", {"class": "col-xs-6 skinny"})
     for cat in cats:
         catDetails = cat.find("div", {"class": "category-name"})
-        catName = catDetails.span["name"]
+        #print(catDetails)
+        catName = catDetails.strong.text
+        Type = catName
+
+
         #Clothing accessories has more categorys
         if catName == "Clothing Accessories":
             subCats(catDetails.a["name"])
-        grabItems(catDetails.a["href"],catName)
+        if catName == "Snowboard Jackets":
+            continue
+        preUrl =cat.find("a", {"class":"thumbnail text-center"})
+        postUrl = preUrl["href"].replace(",","")
+
+        grabItems(postUrl,catName)
 
     return
 
 
 def grabItems(extentionUrl, itemType):
-    print("grab Items entered")
+    print("grab Items entered " + itemType)
     # first we look at the first page of the catigory we change the url as we have completed the page
     newClient = uReq(regUrl + extentionUrl)
     cagigorysoup = bs(newClient.read(), "html.parser")
@@ -84,7 +93,10 @@ def grab(Type, items,url, oldsoup ):
     endofitems = oldsoup.findAll("a", {"aria-label": "Go to last page"})
     # print(endofitems)
     # print(endofitems[0]["href"])
-    while ("?nocache=1&refine.pagenumber=" + str(count)) != endofitems[0]["href"]:
+    # print(url)
+    # print(endofitems[0]["href"])
+    while (url+"?nocache=1&refine.pagenumber=" + str(count)) != "https://www.The-House.com/"+endofitems[0]["href"]:
+        #print(count)
         if count>1:
             page ="?nocache=1&refine.pagenumber="+str(count)
             newUrl = url+page
@@ -96,6 +108,7 @@ def grab(Type, items,url, oldsoup ):
         # print(len(items))
         # print(count)
         for item in items:
+
 
             onsale = "F"
             discount = ""
@@ -121,21 +134,24 @@ def grab(Type, items,url, oldsoup ):
             price = prePrice[0].text
             preurl = item.div.findAll("div", {"class": "category-product-title"})
             itemUrl = regUrl + preurl[0].a["href"]
-            # print(itemUrl)
+            #print(itemUrl)
             pageClient= uReq(itemUrl)
             pagehtml = bs(pageClient.read(), "html.parser")
             time.sleep(5)
             pageClient.close()
-            predesc =pagehtml.findAll("div", {"class": "col-sm-8 col-xs-12"})
-            # print(predesc[0].div.p)
-            itemDesc = predesc[0].div.p.text
+            #print(pagehtml)
+            predesc = pagehtml.findAll("div", {"id": "product-description"})
+            if len(predesc) ==0:
+                itemDesc =""
+            else:
+                #print(predesc)
+                itemDesc = predesc[0].text
+
+
             # itemDesc= str(itemDesc).strip("\\t\\n")
-            itemDesc = itemDesc.strip()
-            itemDesc = itemDesc.replace("\n", "")
-            itemDesc = itemDesc.replace(",","")
-
-
-            #print(itemDesc)
+            itemDesc = itemDesc.replace(",","").replace("\n","").replace("\t","").replace("\v","").replace("\r","").replace("\b", "").strip()
+            # print(itemDesc)
+            # print(repr(itemDesc))
 
             dis=item.findAll("span",{"class":"category-product-discount sale"})
             # print(dis)
@@ -147,6 +163,7 @@ def grab(Type, items,url, oldsoup ):
             else:
                 discount=""
             # feilds = name,item desc, picture, type, brand,  year, size, price, url, is onsale, gender
+            print(name)
             #print(repr(str(name)+","+str(itemDesc) + ","+ str(picture)+ ","+ str(Type)+","+str(brand)+ ","+ str(size)+ ","+ str(price)+ ","+ str(itemUrl)+"," + onsale +"," + str(discount)))
             file.write(str(name)+","+str(itemDesc) + ","+ str(picture)+ ","+ str(Type)+","+str(brand)+ ","+ str(size)+ ","+ str(price)+ ","+ str(itemUrl)+"," + str(onsale)+"," + str(discount)+ "\n" )
         count +=1
