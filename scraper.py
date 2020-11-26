@@ -65,7 +65,7 @@ def subCats(extentionUrl):
 
         #Clothing accessories has more categorys
         if catName == "Clothing Accessories":
-            subCats(catDetails.a["name"])
+            continue
         preUrl =cat.find("a", {"class":"thumbnail text-center"})
         postUrl = preUrl["href"].replace(",","")
 
