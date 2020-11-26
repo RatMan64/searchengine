@@ -87,15 +87,20 @@ def grabItems(extentionUrl, itemType):
     return
 
 def grab(Type, items,url, oldsoup ):
+    lastPage = False
     count =1
     endofitems = oldsoup.findAll("a", {"aria-label": "Go to last page"})
     # print(endofitems)
     # print(endofitems[0]["href"])
     # print(url)
     # print(endofitems[0]["href"])
-    while (url+"?nocache=1&refine.pagenumber=" + str(count)) != "https://www.The-House.com/"+endofitems[0]["href"]:
+    while lastPage != True:
+        if (url + "?nocache=1&refine.pagenumber=" + str(count)) == "https://www.The-House.com/" + endofitems[0]["href"]:
+            lastPage = True
+
         #print(count)
         if count>1:
+
             page ="?nocache=1&refine.pagenumber="+str(count)
             newUrl = url+page
             newPageClient = uReq(newUrl)
