@@ -38,7 +38,7 @@ def beginScrape():
         # print(urlExt)
 
         # skip snow skaters
-        if catigoryName == "Snow Skate, Snow Surfers"  or catigoryName == "Snowboard Packages" or catigoryName == "Snowboards":
+        if catigoryName == "Snow Skate, Snow Surfers"  or catigoryName == "Snowboard Packages":
             continue
         # if its a catigory that has sub classes go to the subcats function
         if catigoryName == "Snowboarding Clothes & Apparel" or catigoryName == "Snowboard Accessories" or catigoryName =="Splitboard Gear":
@@ -66,8 +66,6 @@ def subCats(extentionUrl):
         #Clothing accessories has more categorys
         if catName == "Clothing Accessories":
             subCats(catDetails.a["name"])
-        if catName == "Snowboard Jackets":
-            continue
         preUrl =cat.find("a", {"class":"thumbnail text-center"})
         postUrl = preUrl["href"].replace(",","")
 
