@@ -1,0 +1,35 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+
+{% block navbar %}
+
+
+{% endblock %}
+
+
+{% block content %}
+<div class="jumbotron">
+  <h1>Snowboard Search Engine</h1>
+  <p>Looking for a new board this season?</p>
+  <!-- Search form -->
+  <input class="form-control" type="text" placeholder="Search: Burton, Libtech, Capita, Signal, Boots, Gloves..etc" aria-label="Search">
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-10 col-lg-8 mx-lg-auto mx-md-auto">
+
+      <h1 class="pt-5 pb-2">Snowboard Search Engine</h1>
+
+      <p class="lead">Search For A New Board Or Gear</p>
+
+      {{ wtf.quick_form(form) }}
+
+      <p class="pt-5"><strong>{{ message }}</strong></p>
+
+    </div>
+  </div>
+</div>
+ 
+{% endblock %}
