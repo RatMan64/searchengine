@@ -3,9 +3,11 @@ import sys
 import os, os.path
 
 from flask import Flask, render_template, redirect, url_for, request
-#from flask_bootstrap import Bootstrap
-#from flask_wtf import FlaskForm
-#from wtforms.validators import DataRequired
+
+from flask_bootstrap import Bootstrap
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
 
 import whoosh
 from whoosh.index import create_in
@@ -31,13 +33,13 @@ import csv
 
 app = Flask(__name__)
 
-#app.config['SECRET_KEY'] = 'NOJERRYSALLOWEDbcSHBXUXs2123'
+app.config['SECRET_KEY'] = 'NOJERRYSALLOWEDbcSHBXUXs2123'
 
-#bootstrap =Bootstrap(app)
+bootstrap =Bootstrap(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-	print('HEya')
+
 	return render_template('welcome_page.html')
 
 
@@ -60,7 +62,7 @@ def results():
 	item, description, picture, productType, brand, size, price, url, onsale, discount = mysearch.index_search(keywordquery)
 	
 
-	return render_template('results.html', query=keywordquery, results=zip(item,description,picture,productType,brand,size,price,url,onsale,discount))
+	return render_template('results.html', query=keywordquery, len = len(item), item =item, description= description, picture =picture, productType = productType, brand = brand, size = size, price =price, url =url, onsale = onsale, discount =discount)
 
 
 
@@ -68,9 +70,9 @@ def results():
 	
 
 
-#class NameForm(FlaskForm):
-   # name = StringField('Which actor is your favorite?', validators=[DataRequired()])
-  #  submit = SubmitField('Submit')
+class NameForm(FlaskForm):
+    name = StringField('Which actor is your favorite?', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 
@@ -122,6 +124,7 @@ class wooshSearch(object):
 	# creates index searcher
 
 	def index_search(self,queryEntered):
+
 		item = list()
 		description = list()
 		picture= list()
@@ -133,38 +136,39 @@ class wooshSearch(object):
 		onsale= list()
 		discount= list()
 
-
-		
-		
+		ix = open_dir('exampleIndex')
+		schema = ix.schema
 		# Create query parser that looks through designated fields in index
-		#og = qparser.OrGroup.factory(0.9)
-		#mp = qparser.MultifieldParser(['item', 'description','picture','productType','brand','size','price','url','onsale','discount'], schema=self.ix.schema, group = og)
+		og = qparser.OrGroup.factory(0.9)
+		mp = qparser.MultifieldParser(['item', 'description','picture','productType','brand','size','price','url','onsale','discount'], schema =self.ix.schema, group = og)
 
 		# This is the user query
-		#query = input("Please enter a Board or gear you would like:")
-		#query = (queryEntered)
-		#q = mp.parse(query)
+		#query = input("Please enter a Title, Year, Rating, IMDB tag, or some type of key word description:")
+		q = mp.parse(queryEntered)
 		#threshold = int(input("How many results would you like?:"))
 		# Actual searcher, prints top 10 hits
-		with self.ix.searcher() as s:
-			query = MultifieldParser(['item', 'description','picture','productType','brand','size','price','url','onsale','discount'], schema=self.ix.schema)
-			query = query.parse(queryEntered)
+		with ix.searcher() as s:
+			results = s.search(q, limit = None)	#user threshold
+			print("Search Results: ")
+			try:
+				for i in results:
+					#print("\n RESULT #:",i+1 )			#prints resuts 
+					#print(results[i])
+					#print("\n")
 
-			results = s.search(query, limit = None)
+					item.append(i['item'])
+					description.append(i['description'])
+					picture.append(i['picture'])
+					productType.append(i['productType'])
+					brand.append(i['brand'])
+					size.append(i['size'])
+					price.append(i['price'])
+					url.append(i['url'])
+					onsale.append(i['onsale'])
+					discount.append(i['discount'])
 
-			for i in results:
-				item.append(i['item'])
-				description.append(i['description'])
-				picture.append(i['picture'])
-				productType.append(i['productType'])
-				brand.append(i['brand'])
-				price.append(i['price'])
-				url.append(i['url'])
-				onsale.append(i['onsale'])
-				discount.append(i['discount'])
-
-		
-											#program goes into the infinite while loop for another query
+			except IndexError:							#if it doesnt find x number of results it catches the error 
+				pass									#program goes into the infinite while loop for another query
 		return  item, description, picture, productType, brand, size, price, url, onsale, discount
 
 
