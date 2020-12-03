@@ -3,6 +3,8 @@ https://python-adv-web-apps.readthedocs.io/en/latest/flask.html
 go here to set up flask virtual environment ^^^
 
 
+source env/bin/activate
+
 
 pip install Flask-Bootstrap4
 
