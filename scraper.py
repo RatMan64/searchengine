@@ -121,7 +121,7 @@ def grab(Type, items, url, oldsoup):
             onsale = "F"
             discount = ""
             name = item.div.div.a.img["alt"]
-            picture = item.div.div.a.img["src"]
+
             brandtitle = item.findAll("meta", {"itemprop": "brand"})
             # print(brandtitle[0]["content"])
             brand = brandtitle[0]["content"]
@@ -146,6 +146,9 @@ def grab(Type, items, url, oldsoup):
             pagehtml = bs(pageClient.read(), "html.parser")
             time.sleep(5)
             pageClient.close()
+            prePicture =pagehtml.findAll("div", {"class":"product-image"})
+            picture = prePicture[0].findAll("img",{"itemprop":"image"})[0]["src"]
+            # print(picture)
             # print(pagehtml)
             predesc = pagehtml.findAll("div", {"id": "product-description"})
             if len(predesc) == 0:
@@ -171,7 +174,7 @@ def grab(Type, items, url, oldsoup):
             else:
                 discount = ""
             # feilds = name,item desc, picture, type, brand,  year, size, price, url, is onsale, gender
-            print(name)
+            # print(name)
             # print(repr(str(name)+","+str(itemDesc) + ","+ str(picture)+ ","+ str(Type)+","+str(brand)+ ","+ str(size)+ ","+ str(price)+ ","+ str(itemUrl)+"," + onsale +"," + str(discount)))
             file.write(
                 str(name) + "," + str(itemDesc) + "," + str(picture) + "," + str(Type) + "," + str(brand) + "," + str(
