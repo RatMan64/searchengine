@@ -121,7 +121,13 @@ def grab(Type, items, url, oldsoup):
             onsale = "F"
             discount = ""
             name = item.div.div.a.img["alt"]
-            picture = item.div.div.a.img["src"]
+            picture = item.findAll("a", {"class": "category-product-mainimage clearfix"})[0].img["src"]
+            if(picture == "static/img/loading.gif"):
+                prePicture =item.findAll("a",{"class":"category-product-mainimage clearfix"})[0]
+                noscript = prePicture.findAll("noscript")[0]
+                noscript = noscript.contents
+                picture = findSource(noscript)
+            # print(picture)
             brandtitle = item.findAll("meta", {"itemprop": "brand"})
             # print(brandtitle[0]["content"])
             brand = brandtitle[0]["content"]
@@ -171,7 +177,7 @@ def grab(Type, items, url, oldsoup):
             else:
                 discount = ""
             # feilds = name,item desc, picture, type, brand,  year, size, price, url, is onsale, gender
-            print(name)
+            # print(name)
             # print(repr(str(name)+","+str(itemDesc) + ","+ str(picture)+ ","+ str(Type)+","+str(brand)+ ","+ str(size)+ ","+ str(price)+ ","+ str(itemUrl)+"," + onsale +"," + str(discount)))
             file.write(
                 str(name) + "," + str(itemDesc) + "," + str(picture) + "," + str(Type) + "," + str(brand) + "," + str(
@@ -184,6 +190,25 @@ def grab(Type, items, url, oldsoup):
             isLastPage = True
 
         onlyOnePage = False
+def findSource(stringarray):
+    string = str(stringarray[0])
+    stringA = string.split()
+    wantedString=""
+    for i in range(len(stringA)):
+        if "src=" in stringA[i]:
+            wantedString = stringA[i]
+            break
+
+    wantedString = wantedString[5:]
+    stringALength = len(wantedString)
+    wantedString = wantedString[0:(stringALength -3)]
+    # print(wantedString)
+
+    finalString = wantedString
+    return finalString
+
+
+
 
 
 def main():
