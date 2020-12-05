@@ -121,7 +121,13 @@ def grab(Type, items, url, oldsoup):
             onsale = "F"
             discount = ""
             name = item.div.div.a.img["alt"]
-
+            picture = item.findAll("a", {"class": "category-product-mainimage clearfix"})[0].img["src"]
+            if(picture == "static/img/loading.gif"):
+                prePicture =item.findAll("a",{"class":"category-product-mainimage clearfix"})[0]
+                noscript = prePicture.findAll("noscript")[0]
+                noscript = noscript.contents
+                picture = findSource(noscript)
+            # print(picture)
             brandtitle = item.findAll("meta", {"itemprop": "brand"})
             # print(brandtitle[0]["content"])
             brand = brandtitle[0]["content"]
@@ -146,9 +152,6 @@ def grab(Type, items, url, oldsoup):
             pagehtml = bs(pageClient.read(), "html.parser")
             time.sleep(5)
             pageClient.close()
-            prePicture =pagehtml.findAll("div", {"class":"product-image"})
-            picture = prePicture[0].findAll("img",{"itemprop":"image"})[0]["src"]
-            # print(picture)
             # print(pagehtml)
             predesc = pagehtml.findAll("div", {"id": "product-description"})
             if len(predesc) == 0:
@@ -187,6 +190,25 @@ def grab(Type, items, url, oldsoup):
             isLastPage = True
 
         onlyOnePage = False
+def findSource(stringarray):
+    string = str(stringarray[0])
+    stringA = string.split()
+    wantedString=""
+    for i in range(len(stringA)):
+        if "src=" in stringA[i]:
+            wantedString = stringA[i]
+            break
+
+    wantedString = wantedString[5:]
+    stringALength = len(wantedString)
+    wantedString = wantedString[0:(stringALength -3)]
+    # print(wantedString)
+
+    finalString = wantedString
+    return finalString
+
+
+
 
 
 def main():
