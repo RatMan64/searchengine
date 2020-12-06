@@ -15,6 +15,7 @@ from whoosh.fields import *
 from whoosh.qparser import QueryParser
 from whoosh.qparser import MultifieldParser
 from whoosh import qparser
+from whoosh import fields, index, qparser
 
 
 import pandas as pd
@@ -27,20 +28,13 @@ import math
 
 
 
-
-
-
-
-
-
-
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'NOJERRYSALLOWEDbcSHBXUXs2123'
 
 bootstrap =Bootstrap(app)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST']) #main index page 
 def index():
 
 	return render_template('welcome_page.html')
@@ -49,7 +43,8 @@ def index():
 
 @app.route('/next/<qp>/<pp>' , methods=["GET", "POST"])
 def next(qp,pp):
-	data = request.form
+	global mysearch
+	data = request.form 	#pass the variables of the search to next , get page and increment it
 
 	print (qp)
 	print(pp)
@@ -66,9 +61,10 @@ def next(qp,pp):
 
 @app.route('/previous/<q>/<p>' , methods=["GET", "POST"])
 def previous(q,p):
+	global mysearch
 	data = request.form
 
-	print (q)
+	print (q)					# same as next but this deincrements the page. 
 	print(p)
 	keywordquery = q
 	int(p)
@@ -92,21 +88,6 @@ def results():
 	page = 1
 	if request.method == 'POST':
 		data = request.form
-		if request.form['Previous_Page'] =='Previous Page':
-			 print('Previous page')
-			 page-=1
-			 keywordquery = data.get('searchterm')
-			 item, description, picture, productType, brand, size, price, url, onsale, discount = mysearch.index_search(keywordquery,page)
-			 return render_template('results.html', query=keywordquery, len = len(item), pag = math.ceil(len(item)/10) , item =item, description= description, picture =picture, productType = productType, brand = brand, size = size, price =price, url =url, onsale = onsale, discount =discount)
-
-
-		if request.form['Next_Page'] =='Next Page':
-			 print('next page')
-			 page+=1
-			 keywordquery = data.get('searchterm')
-			 item, description, picture, productType, brand, size, price, url, onsale, discount = mysearch.index_search(keywordquery,page)
-			 return render_template('results.html', query=keywordquery, len = len(item), pag = math.ceil(len(item)/10) , item =item, description= description, picture =picture, productType = productType, brand = brand, size = size, price =price, url =url, onsale = onsale, discount =discount)
-
 
 	else:
 		data = request.args
@@ -114,16 +95,22 @@ def results():
 	keywordquery = data.get('searchterm')
 	
 
-	#print('Keyword Query is: ' + keywordquery)
-
-
-	#titles, description = mysearch.search(keywordquery)
-
 	item, description, picture, productType, brand, size, price, url, onsale, discount, page = mysearch.index_search(keywordquery,page)
 	
 
 	return render_template('results.html', query=keywordquery, len = len(item), pag = math.ceil(len(item)/10) , page = page, item =item, description= description, picture =picture, productType = productType, brand = brand, size = size, price =price, url =url, onsale = onsale, discount =discount)
 
+
+@app.route('/priceFilter/<q3>/<p3>', methods=['GET', 'POST'])
+def priceFilter(q3,p3):
+	global mysearch
+
+	page = int(p3)
+	keywordquery = q3 #sends the query and page to the price_search function where it sorts the pricing of that query
+
+	item, description, picture, productType, brand, size, price, url, onsale, discount, page = mysearch.price_search(keywordquery,page)
+
+	return render_template('results.html', query=keywordquery, len = len(item), pag = math.ceil(len(item)/10) , page = page, item =item, description= description, picture =picture, productType = productType, brand = brand, size = size, price =price, url =url, onsale = onsale, discount =discount)
 
 
 #approutes=============================================================================
@@ -141,11 +128,11 @@ class wooshSearch(object):
 
 	def index(self):
 		
-		with open(r"SearchEngineData3.csv") as csv_file:
+		with open(r"SearchEngineDataF.csv",encoding="utf8") as csv_file:
 			csv_reader = csv.reader(csv_file, delimiter=',')
 			df = pd.DataFrame([csv_reader], index=None) 
 			df.head() 
-		schema = Schema(item=TEXT(stored=True), description=TEXT(stored=True), picture=TEXT(stored = True),productType=TEXT(stored = True),brand=TEXT(stored = True),size=TEXT(stored = True),price=TEXT(stored = True),url=TEXT(stored = True),onsale=TEXT(stored = True),discount=TEXT(stored = True))
+		schema = Schema(item=TEXT(stored=True), description=TEXT(stored=True), picture=TEXT(stored = True),productType=TEXT(stored = True),brand=TEXT(stored = True),size=TEXT(stored = True),price=TEXT(sortable=True),url=TEXT(stored = True),onsale=TEXT(stored = True),discount=TEXT(stored = True))
 		
 		ix = create_in('exampleIndex', schema)
 		
@@ -167,7 +154,7 @@ class wooshSearch(object):
 						   price =(val[6]),
 						   url =(val[7]),
 						   onsale =(val[8]),
-						   discount =(val[9]))
+						   discount = (val[9]))
 
 				writer.commit()
 				self.ix = ix
@@ -227,6 +214,53 @@ class wooshSearch(object):
 		return  item, description, picture, productType, brand, size, price, url, onsale, discount, page
 
 
+	def price_search(self,queryEntered,page):
+
+		item = list()
+		description = list()
+		picture= list()
+		productType= list()
+		brand= list()
+		size= list()
+		price= list()
+		url= list()
+		onsale= list()
+		discount= list()
+
+		ix = open_dir('exampleIndex')
+		schema = ix.schema
+		# Create query parser that looks through designated fields in index
+		og = qparser.OrGroup.factory(0.9)
+		mp = qparser.MultifieldParser(['item', 'description','picture','productType','brand','size','price','url','onsale','discount'], schema =self.ix.schema, group = og)
+
+		# This is the user query
+		#query = input("Please enter a Title, Year, Rating, IMDB tag, or some type of key word description:")
+		q = mp.parse(queryEntered)
+		#threshold = int(input("How many results would you like?:"))
+		# Actual searcher, prints top 10 hits
+		with ix.searcher() as s:
+			results = s.search_page(q, page, sortedby="price")	#search page by sorting of the price tag
+			print("Search Results: ")
+			try:
+				for i in results:
+					
+					#append the results
+					item.append(i['item'])
+					description.append(i['description'])
+					picture.append(i['picture'])
+					productType.append(i['productType'])
+					brand.append(i['brand'])
+					size.append(i['size'])
+					price.append(i['price'])
+					url.append(i['url'])
+					onsale.append(i['onsale'])
+					discount.append(i['discount'])
+
+			except IndexError:							#if it doesnt find x number of results it catches the error 
+				pass									#program goes into the infinite while loop for another query
+		return  item, description, picture, productType, brand, size, price, url, onsale, discount, page
+
+
 if __name__ == '__main__':
 	
 	global mysearch
@@ -234,10 +268,6 @@ if __name__ == '__main__':
 	mysearch = wooshSearch()
 
 	mysearch.index()
-
-	#print("\n\n Welcome to the Snowboard search engine")
-
-	#wooshSearch().index_search("Snowboard_Index", ['item', 'description','picture','productType','brand','size','price','url','onsale','discount'],keywordquery)
 
 	app.run(debug=True, use_reloader =False)
 	
